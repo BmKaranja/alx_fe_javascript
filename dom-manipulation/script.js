@@ -5,13 +5,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     btn.addEventListener('click', showRandomQuote)
     function showRandomQuote(){
-        const quoteArray={
-            q1: "My name is Bryan...",
-            q2: "Practicing JavaScript!",
-            q3: "Every bug is a lesson.",
-            q4: "Code like poetry, debug like a detective.",
-            q5: "Frontend finesse meets backend logic."
-        }
+        const quoteArray=[
+            { text: "Frontend finesse meets backend logic.", category: "Tech" },
+            { text: "Every bug is a lesson.", category: "Wisdom" },
+            { text: "Code like poetry, debug like a detective.", category: "Creative" }
+        ];
+
         const q_values=Object.values(quoteArray)
         function getRandomQuote() {
             const index = Math.floor(Math.random() * q_values.length);
