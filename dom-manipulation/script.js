@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const addBtn = document.getElementById('addQuote');
   const showBtn = document.getElementById('newQuote');
   const exportBtn = document.getElementById('exportQuotes');
+  const categoryFilter = document.getElementById('categoryFilter');
 
   // Load quotes from localStorage or use default
   let quotes = JSON.parse(localStorage.getItem("quotes")) || [
@@ -18,7 +19,40 @@ document.addEventListener('DOMContentLoaded', function () {
     localStorage.setItem("quotes", JSON.stringify(quotes));
   }
 
-  // Display a random quote
+  // Populate dropdown with unique categories
+  function populateCategories() {
+    const categories = [...new Set(quotes.map(q => q.category))];
+    categoryFilter.innerHTML = '<option value="All">All</option>';
+    categories.forEach(cat => {
+      const option = document.createElement('option');
+      option.value = cat;
+      option.textContent = cat;
+      categoryFilter.appendChild(option);
+    });
+
+    // Restore last selected filter
+    const lastFilter = localStorage.getItem("lastSelectedCategory");
+    if (lastFilter) {
+      categoryFilter.value = lastFilter;
+      filterQuotes(lastFilter);
+    }
+  }
+
+  // Filter quotes by category
+  function filterQuotes(category) {
+    Display.innerHTML = "";
+    const filtered = category === "All" ? quotes : quotes.filter(q => q.category === category);
+    filtered.forEach(q => {
+      const p = document.createElement("p");
+      p.textContent = `"${q.text}" — ${q.category}`;
+      Display.appendChild(p);
+    });
+
+    // Save filter to localStorage
+    localStorage.setItem("lastSelectedCategory", category);
+  }
+
+  // Show random quote
   showBtn.addEventListener('click', function () {
     const index = Math.floor(Math.random() * quotes.length);
     const quote = quotes[index];
@@ -28,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
     sessionStorage.setItem("lastViewedQuote", JSON.stringify(quote));
   });
 
-  // Add a new quote
+  // Add new quote
   addBtn.addEventListener('click', function () {
     const newText = n_quote.value.trim();
     const newCategory = nQC.value.trim();
@@ -40,26 +74,25 @@ document.addEventListener('DOMContentLoaded', function () {
       n_quote.value = "";
       nQC.value = "";
 
-      Display.textContent = `"${newText}" — ${newCategory}`;
+      populateCategories(); // Update dropdown
+      filterQuotes(categoryFilter.value); // Refresh display
     } else {
       alert("Please enter both a quote and a category.");
     }
   });
 
-  // Export quotes to JSON file
+  // Export quotes to JSON
   exportBtn.addEventListener('click', function () {
     const blob = new Blob([JSON.stringify(quotes, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-
     const link = document.createElement("a");
     link.href = url;
     link.download = "quotes.json";
     link.click();
-
     URL.revokeObjectURL(url);
   });
 
-  // Import quotes from JSON file
+  // Import quotes from JSON
   window.importFromJsonFile = function (event) {
     const fileReader = new FileReader();
     fileReader.onload = function (e) {
@@ -68,6 +101,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (Array.isArray(importedQuotes)) {
           quotes.push(...importedQuotes);
           saveQuotes();
+          populateCategories();
+          filterQuotes(categoryFilter.value);
           alert('Quotes imported successfully!');
         } else {
           alert('Invalid JSON format.');
@@ -79,7 +114,14 @@ document.addEventListener('DOMContentLoaded', function () {
     fileReader.readAsText(event.target.files[0]);
   };
 
-  // Optional: Show last viewed quote from sessionStorage
+  // Filter on dropdown change
+  categoryFilter.addEventListener('change', function () {
+    filterQuotes(this.value);
+  });
+
+  // Initial setup
+  populateCategories();
+
   const lastQuote = sessionStorage.getItem("lastViewedQuote");
   if (lastQuote) {
     const quote = JSON.parse(lastQuote);
