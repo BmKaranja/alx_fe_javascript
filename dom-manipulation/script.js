@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const resolveBtn = document.getElementById('resolveConflicts');
   const syncNotice = document.getElementById('syncNotice');
 
-  const apiUrl = "https://jsonplaceholder.typicode.com/posts";
+  const apiUrl = "https://jsonplaceholder.typicode.com/posts"; // ✅ Mock API
 
   let quotes = JSON.parse(localStorage.getItem("quotes")) || [
     { text: "Frontend finesse meets backend logic.", category: "Tech" },
@@ -66,13 +66,26 @@ document.addEventListener('DOMContentLoaded', () => {
     sessionStorage.setItem("lastViewedQuote", JSON.stringify(quote));
   });
 
-  addBtn.addEventListener('click', () => {
+  addBtn.addEventListener('click', async () => {
     const newText = n_quote.value.trim();
     const newCategory = nQC.value.trim();
 
     if (newText && newCategory) {
-      quotes.push({ text: newText, category: newCategory });
+      const newQuote = { text: newText, category: newCategory };
+      quotes.push(newQuote);
       saveQuotes();
+
+      // ✅ Post to mock API
+      try {
+        await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newQuote)
+        });
+        showSyncNotification("Quote added and posted to server.");
+      } catch (err) {
+        console.error("Failed to post quote:", err);
+      }
 
       n_quote.value = "";
       nQC.value = "";
@@ -120,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   resolveBtn.addEventListener('click', () => {
-    fetchQuotesFromServer();
+    fetchQuotesFromServer(); // ✅ Manual sync
     showSyncNotification("Manual sync triggered.");
   });
 
@@ -131,6 +144,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 5000);
   }
 
+  // ✅ Periodic server fetch
+  setInterval(fetchQuotesFromServer, 30000);
+
+  // ✅ SyncQuotes function
   async function fetchQuotesFromServer() {
     try {
       const res = await fetch(apiUrl);
@@ -139,13 +156,14 @@ document.addEventListener('DOMContentLoaded', () => {
         text: post.title,
         category: "Server"
       }));
-      syncWithServer(serverQuotes);
+      syncQuotes(serverQuotes);
     } catch (err) {
       console.error("Server fetch failed:", err);
     }
   }
 
-  function syncWithServer(serverQuotes) {
+  // ✅ Conflict resolution and localStorage update
+  function syncQuotes(serverQuotes) {
     let localQuotes = JSON.parse(localStorage.getItem("quotes")) || [];
     let updated = false;
 
@@ -174,6 +192,4 @@ document.addEventListener('DOMContentLoaded', () => {
     const quote = JSON.parse(lastQuote);
     Display.textContent = `"${quote.text}" — ${quote.category}`;
   }
-
-  setInterval(fetchQuotesFromServer, 30000);
 });
