@@ -7,19 +7,16 @@ document.addEventListener('DOMContentLoaded', function () {
   const exportBtn = document.getElementById('exportQuotes');
   const categoryFilter = document.getElementById('categoryFilter');
 
-  // Load quotes from localStorage or use default
   let quotes = JSON.parse(localStorage.getItem("quotes")) || [
     { text: "Frontend finesse meets backend logic.", category: "Tech" },
     { text: "Every bug is a lesson.", category: "Wisdom" },
     { text: "Code like poetry, debug like a detective.", category: "Creative" }
   ];
 
-  // Save quotes to localStorage
   function saveQuotes() {
     localStorage.setItem("quotes", JSON.stringify(quotes));
   }
 
-  // Populate dropdown with unique categories
   function populateCategories() {
     const categories = [...new Set(quotes.map(q => q.category))];
     categoryFilter.innerHTML = '<option value="All">All</option>';
@@ -30,39 +27,41 @@ document.addEventListener('DOMContentLoaded', function () {
       categoryFilter.appendChild(option);
     });
 
-    // Restore last selected filter
     const lastFilter = localStorage.getItem("lastSelectedCategory");
-    if (lastFilter) {
+    if (lastFilter && categories.includes(lastFilter)) {
       categoryFilter.value = lastFilter;
       filterQuotes(lastFilter);
+    } else {
+      filterQuotes("All");
     }
   }
 
-  // Filter quotes by category
-  function filterQuotes(category) {
-    Display.innerHTML = "";
-    const filtered = category === "All" ? quotes : quotes.filter(q => q.category === category);
-    filtered.forEach(q => {
-      const p = document.createElement("p");
-      p.textContent = `"${q.text}" — ${q.category}`;
-      Display.appendChild(p);
-    });
+  function filterQuotes(selectedCategory) {
+    const filtered = selectedCategory === "All"
+      ? quotes
+      : quotes.filter(q => q.category === selectedCategory);
 
-    // Save filter to localStorage
-    localStorage.setItem("lastSelectedCategory", category);
+    Display.innerHTML = "";
+    if (filtered.length === 0) {
+      Display.textContent = "No quotes found for this category.";
+    } else {
+      filtered.forEach(q => {
+        const p = document.createElement("p");
+        p.textContent = `"${q.text}" — ${q.category}`;
+        Display.appendChild(p);
+      });
+    }
+
+    localStorage.setItem("lastSelectedCategory", selectedCategory);
   }
 
-  // Show random quote
   showBtn.addEventListener('click', function () {
     const index = Math.floor(Math.random() * quotes.length);
     const quote = quotes[index];
     Display.textContent = `"${quote.text}" — ${quote.category}`;
-
-    // Save to sessionStorage
     sessionStorage.setItem("lastViewedQuote", JSON.stringify(quote));
   });
 
-  // Add new quote
   addBtn.addEventListener('click', function () {
     const newText = n_quote.value.trim();
     const newCategory = nQC.value.trim();
@@ -74,14 +73,13 @@ document.addEventListener('DOMContentLoaded', function () {
       n_quote.value = "";
       nQC.value = "";
 
-      populateCategories(); // Update dropdown
-      filterQuotes(categoryFilter.value); // Refresh display
+      populateCategories();
+      filterQuotes(categoryFilter.value);
     } else {
       alert("Please enter both a quote and a category.");
     }
   });
 
-  // Export quotes to JSON
   exportBtn.addEventListener('click', function () {
     const blob = new Blob([JSON.stringify(quotes, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -92,7 +90,6 @@ document.addEventListener('DOMContentLoaded', function () {
     URL.revokeObjectURL(url);
   });
 
-  // Import quotes from JSON
   window.importFromJsonFile = function (event) {
     const fileReader = new FileReader();
     fileReader.onload = function (e) {
@@ -114,12 +111,10 @@ document.addEventListener('DOMContentLoaded', function () {
     fileReader.readAsText(event.target.files[0]);
   };
 
-  // Filter on dropdown change
   categoryFilter.addEventListener('change', function () {
     filterQuotes(this.value);
   });
 
-  // Initial setup
   populateCategories();
 
   const lastQuote = sessionStorage.getItem("lastViewedQuote");
