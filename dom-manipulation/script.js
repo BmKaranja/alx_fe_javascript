@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   resolveBtn.addEventListener('click', function () {
-    fetchServerQuotes();
+    fetchQuotesFromServer();
     showSyncNotification("Manual sync triggered.");
   });
 
@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }, 5000);
   }
 
-  function fetchServerQuotes() {
+  function fetchQuotesFromServer() {
     fetch(apiUrl)
       .then(res => res.json())
       .then(data => {
@@ -165,7 +165,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Initial setup
   populateCategories();
 
   const lastQuote = sessionStorage.getItem("lastViewedQuote");
@@ -174,6 +173,5 @@ document.addEventListener('DOMContentLoaded', function () {
     Display.textContent = `"${quote.text}" — ${quote.category}`;
   }
 
-  // Periodic sync every 30 seconds
-  setInterval(fetchServerQuotes, 30000);
+  setInterval(fetchQuotesFromServer, 30000);
 });
