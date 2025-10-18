@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
   const Display = document.getElementById('quoteDisplay');
   const n_quote = document.getElementById('newQuoteText');
   const nQC = document.getElementById('newQuoteCategory');
@@ -59,14 +59,14 @@ document.addEventListener('DOMContentLoaded', function () {
     localStorage.setItem("lastSelectedCategory", selectedCategory);
   }
 
-  showBtn.addEventListener('click', function () {
+  showBtn.addEventListener('click', () => {
     const index = Math.floor(Math.random() * quotes.length);
     const quote = quotes[index];
     Display.textContent = `"${quote.text}" — ${quote.category}`;
     sessionStorage.setItem("lastViewedQuote", JSON.stringify(quote));
   });
 
-  addBtn.addEventListener('click', function () {
+  addBtn.addEventListener('click', () => {
     const newText = n_quote.value.trim();
     const newCategory = nQC.value.trim();
 
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  exportBtn.addEventListener('click', function () {
+  exportBtn.addEventListener('click', () => {
     const blob = new Blob([JSON.stringify(quotes, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -94,32 +94,32 @@ document.addEventListener('DOMContentLoaded', function () {
     URL.revokeObjectURL(url);
   });
 
-  window.importFromJsonFile = function (event) {
-    const fileReader = new FileReader();
-    fileReader.onload = function (e) {
-      try {
-        const importedQuotes = JSON.parse(e.target.result);
-        if (Array.isArray(importedQuotes)) {
-          quotes.push(...importedQuotes);
-          saveQuotes();
-          populateCategories();
-          filterQuotes(categoryFilter.value);
-          showSyncNotification('Quotes imported successfully!');
-        } else {
-          alert('Invalid JSON format.');
-        }
-      } catch (err) {
-        alert('Error parsing JSON file.');
+  window.importFromJsonFile = async function (event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const text = await file.text();
+    try {
+      const importedQuotes = JSON.parse(text);
+      if (Array.isArray(importedQuotes)) {
+        quotes.push(...importedQuotes);
+        saveQuotes();
+        populateCategories();
+        filterQuotes(categoryFilter.value);
+        showSyncNotification('Quotes imported successfully!');
+      } else {
+        alert('Invalid JSON format.');
       }
-    };
-    fileReader.readAsText(event.target.files[0]);
+    } catch (err) {
+      alert('Error parsing JSON file.');
+    }
   };
 
   categoryFilter.addEventListener('change', function () {
     filterQuotes(this.value);
   });
 
-  resolveBtn.addEventListener('click', function () {
+  resolveBtn.addEventListener('click', () => {
     fetchQuotesFromServer();
     showSyncNotification("Manual sync triggered.");
   });
@@ -131,17 +131,18 @@ document.addEventListener('DOMContentLoaded', function () {
     }, 5000);
   }
 
-  function fetchQuotesFromServer() {
-    fetch(apiUrl)
-      .then(res => res.json())
-      .then(data => {
-        const serverQuotes = data.slice(0, 5).map(post => ({
-          text: post.title,
-          category: "Server"
-        }));
-        syncWithServer(serverQuotes);
-      })
-      .catch(err => console.error("Server fetch failed:", err));
+  async function fetchQuotesFromServer() {
+    try {
+      const res = await fetch(apiUrl);
+      const data = await res.json();
+      const serverQuotes = data.slice(0, 5).map(post => ({
+        text: post.title,
+        category: "Server"
+      }));
+      syncWithServer(serverQuotes);
+    } catch (err) {
+      console.error("Server fetch failed:", err);
+    }
   }
 
   function syncWithServer(serverQuotes) {
@@ -165,6 +166,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  // Initial setup
   populateCategories();
 
   const lastQuote = sessionStorage.getItem("lastViewedQuote");
