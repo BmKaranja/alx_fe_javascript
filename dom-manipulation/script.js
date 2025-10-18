@@ -6,6 +6,10 @@ document.addEventListener('DOMContentLoaded', function () {
   const showBtn = document.getElementById('newQuote');
   const exportBtn = document.getElementById('exportQuotes');
   const categoryFilter = document.getElementById('categoryFilter');
+  const resolveBtn = document.getElementById('resolveConflicts');
+  const syncNotice = document.getElementById('syncNotice');
+
+  const apiUrl = "https://jsonplaceholder.typicode.com/posts";
 
   let quotes = JSON.parse(localStorage.getItem("quotes")) || [
     { text: "Frontend finesse meets backend logic.", category: "Tech" },
@@ -100,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function () {
           saveQuotes();
           populateCategories();
           filterQuotes(categoryFilter.value);
-          alert('Quotes imported successfully!');
+          showSyncNotification('Quotes imported successfully!');
         } else {
           alert('Invalid JSON format.');
         }
@@ -115,6 +119,53 @@ document.addEventListener('DOMContentLoaded', function () {
     filterQuotes(this.value);
   });
 
+  resolveBtn.addEventListener('click', function () {
+    fetchServerQuotes();
+    showSyncNotification("Manual sync triggered.");
+  });
+
+  function showSyncNotification(message) {
+    syncNotice.textContent = message;
+    setTimeout(() => {
+      syncNotice.textContent = "";
+    }, 5000);
+  }
+
+  function fetchServerQuotes() {
+    fetch(apiUrl)
+      .then(res => res.json())
+      .then(data => {
+        const serverQuotes = data.slice(0, 5).map(post => ({
+          text: post.title,
+          category: "Server"
+        }));
+        syncWithServer(serverQuotes);
+      })
+      .catch(err => console.error("Server fetch failed:", err));
+  }
+
+  function syncWithServer(serverQuotes) {
+    let localQuotes = JSON.parse(localStorage.getItem("quotes")) || [];
+    let updated = false;
+
+    serverQuotes.forEach(sq => {
+      const exists = localQuotes.some(lq => lq.text === sq.text);
+      if (!exists) {
+        localQuotes.push(sq);
+        updated = true;
+      }
+    });
+
+    if (updated) {
+      localStorage.setItem("quotes", JSON.stringify(localQuotes));
+      quotes = localQuotes;
+      populateCategories();
+      filterQuotes(categoryFilter.value);
+      showSyncNotification("New quotes synced from server.");
+    }
+  }
+
+  // Initial setup
   populateCategories();
 
   const lastQuote = sessionStorage.getItem("lastViewedQuote");
@@ -122,4 +173,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const quote = JSON.parse(lastQuote);
     Display.textContent = `"${quote.text}" — ${quote.category}`;
   }
+
+  // Periodic sync every 30 seconds
+  setInterval(fetchServerQuotes, 30000);
 });
