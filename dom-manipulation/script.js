@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
       quotes = localQuotes;
       populateCategories();
       filterQuotes(categoryFilter.value);
-      showSyncNotification("New quotes synced from server.");
+      showSyncNotification("Quotes synced with server!");
     }
   }
 
