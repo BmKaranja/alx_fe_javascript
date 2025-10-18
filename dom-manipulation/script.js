@@ -20,24 +20,28 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Add a new quote
-  const addBtn = document.getElementById('addQuote'); // Make sure this button exists in your HTML
-  addBtn.addEventListener('click', addQuote);
+ function createAddQuoteForm() {
+  const formContainer = document.createElement('div');
 
-  function addQuote() {
-    const newText = n_quote.value.trim();
-    const newCategory = nQC.value.trim();
+  const quoteInput = document.createElement('input');
+  quoteInput.id = 'newQuoteText';
+  quoteInput.type = 'text';
+  quoteInput.placeholder = 'Enter a new quote';
 
-    if (newText && newCategory) {
-      quoteArray.push({ text: newText, category: newCategory });
+  const categoryInput = document.createElement('input');
+  categoryInput.id = 'newQuoteCategory';
+  categoryInput.type = 'text';
+  categoryInput.placeholder = 'Enter quote category';
 
-      // Clear inputs
-      n_quote.value = "";
-      nQC.value = "";
+  const addButton = document.createElement('button');
+  addButton.id = 'addQuote';
+  addButton.textContent = 'Add Quote';
+  addButton.addEventListener('click', addQuote); // assumes addQuote() is defined
 
-      // Optional: show the newly added quote
-      Display.textContent = `"${newText}" — ${newCategory}`;
-    } else {
-      alert("Please enter both a quote and a category.");
-    }
-  }
+  formContainer.appendChild(quoteInput);
+  formContainer.appendChild(categoryInput);
+  formContainer.appendChild(addButton);
+
+  document.body.appendChild(formContainer);
+}
 });
